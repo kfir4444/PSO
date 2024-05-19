@@ -2,6 +2,13 @@ from numpy import hsplit
 from numpy.random import uniform
 
 class Particle:
+    """
+    Class Particle for swarm optimization.
+    Args:
+        position (np.array[float, int, np.float, np.int]): the particles initial position.
+        velocity (np.array[float, int, np.float, np.int]): the particles initial velocity.
+    """
+
     def __init__(self, position, velocity):
         self.position = position
         self.velocity = velocity
