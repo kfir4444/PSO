@@ -44,7 +44,6 @@ class Particle:
                 The function itself updates by the particle's velocity.
                """
         self.position = np.add(self.position, self.velocity).astype(np.float64)
-        #store position array in type float64
 
     def evaluate_fitness(self, objective_function):
         return float(objective_function(*hsplit(self.position, self.position.shape[0])))
@@ -60,4 +59,3 @@ class Particle:
         if current_fitness < self.best_fitness:
             self.best_position = np.copy(self.position)
             self.best_fitness = current_fitness
-
