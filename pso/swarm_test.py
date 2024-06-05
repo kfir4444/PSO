@@ -26,7 +26,7 @@ class TestSwarm(unittest.TestCase):
                             "cognitive_coeff" : 1,
                             "social_coeff" : 1,},
                             False)
-        cls.swarm2 = Swarm(5, 3,
+        cls.swarm2 = Swarm(50, 3,
                            {"low": [-100, -100, -100],
                             "high": [100, 100, 100]},
                            {"inertia_weight": 0.5,
@@ -92,6 +92,19 @@ class TestSwarm(unittest.TestCase):
         self.assertEqual(swarm4.global_best_fitness, 5)
         self.assertEqual(swarm4.global_best_position.tolist(), np.array([1, 2]).tolist())
 
+    def test_optimize(self):
+        # Define the objective function
+        objective_function = lambda x, y, z: x**2 + y**2 + z**2
 
+        # Run the optimize method
+        max_iterations = 1000
+        best_position, best_fitness = self.swarm2.optimize(objective_function, max_iterations)
+
+        # Check if the global best position is close to minimum of the function
+        np.testing.assert_array_almost_equal(best_position, [0, 0, 0], decimal=1)
+
+        # Check if the global best fitness is close to 0 (minimum fitness)
+        self.assertAlmostEqual(best_fitness, 0, places=1)
+        print("best position is:",best_position,"best fitness is:", best_fitness)
 
 
