@@ -51,7 +51,7 @@ class Swarm:
         fig, ax = plt.subplots()
         cs = ax.contourf(X, Y, self.z, cmap=cm.PuBu_r)
         cbar = fig.colorbar(cs)
-        p = array([particle.velocity for particle in self.particles])
+        p = array([particle.position for particle in self.particles])
         v = array([particle.velocity for particle in self.particles])
         ax.scatter(p[:, 0], p[:, 1], c="k", marker='+')
         plt.show()
