@@ -1,5 +1,6 @@
 from numpy import abs, array, zeros, meshgrid, linspace
 from numpy.random import uniform
+import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib import cm
 from particle import Particle
@@ -35,26 +36,56 @@ class Swarm:
             particles.append(particle)
         return particles
     
-    def prepare_plot(self, objective_function):
-        if any(map(lambda x: x is None, [self.x, self.y, self.z])):
+    #def prepare_plot(self, objective_function):
+        #if any(map(lambda x: x is None, [self.x, self.y, self.z])):
+            #low, high = self.search_range['low'], self.search_range['high']
+            #self.x = linspace(low[0], high[0], 1000)
+            #self.y = linspace(low[1], high[1], 1000)
+            #self.z = zeros(shape=(self.x.shape[0], self.y.shape[0]))
+            #for indexi, i in enumerate(self.x):
+                #for indexj, j in enumerate(self.y):
+                    #self.z[indexi, indexj] = objective_function(i, j)
+
+    def prepare_plot(self, objective_function, center=None):
+        if center is None:
             low, high = self.search_range['low'], self.search_range['high']
-            self.x = linspace(low[0], high[0], 1000)
-            self.y = linspace(low[1], high[1], 1000)
-            self.z = zeros(shape=(self.x.shape[0], self.y.shape[0]))
-            for indexi, i in enumerate(self.x):
-                for indexj, j in enumerate(self.y):
-                    self.z[indexi, indexj] = objective_function(i, j)
+        else:
+            low = [center[0] - 2, center[1] - 2]
+            high = [center[0] + 2, center[1] + 2]
+
+        self.x = linspace(low[0], high[0], 1000)
+        self.y = linspace(low[1], high[1], 1000)
+        self.z = zeros((len(self.x), len(self.y)))
+
+        for i in range(len(self.x)):
+            for j in range(len(self.y)):
+                self.z[j, i] = objective_function(self.x[i], self.y[j])
 
     def plotter(self, objective_function):
-        self.prepare_plot(objective_function)
-        X, Y = meshgrid(self.x, self.y)
+        min_position = self.global_best_position
+        self.prepare_plot(objective_function, center=min_position)
+        X, Y = np.meshgrid(self.x, self.y)
         fig, ax = plt.subplots()
-        cs = ax.contourf(X, Y, self.z, cmap=cm.PuBu_r)
+        min_value = np.min(self.z)
+        max_value = np.max(self.z)
+        contour_levels = np.linspace(min_value, 10, 10)
+        cs = ax.contourf(X, Y, self.z, levels=contour_levels, cmap=cm.PuBu_r)
         cbar = fig.colorbar(cs)
-        p = array([particle.position for particle in self.particles])
-        v = array([particle.velocity for particle in self.particles])
+        p = np.array([particle.position for particle in self.particles])
         ax.scatter(p[:, 0], p[:, 1], c="k", marker='+')
         plt.show()
+
+    #def plotter(self, objective_function):
+        #self.prepare_plot(objective_function)
+        #X, Y = meshgrid(self.x, self.y)
+        #fig, ax = plt.subplots()
+        #cs = ax.contourf(X, Y, self.z, cmap=cm.PuBu_r)
+        #cbar = fig.colorbar(cs)
+       # p = array([particle.position for particle in self.particles])
+        #v = array([particle.velocity for particle in self.particles])
+        #ax.scatter(p[:, 0], p[:, 1], c="k", marker='+')
+        #plt.show()
+
 
     def generate_random_position(self):
         return uniform(self.search_range['low'], self.search_range['high'], self.num_dimensions)
