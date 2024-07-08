@@ -25,7 +25,7 @@ class Particle:
                 "best_position" : self.best_position,
                 "best_fitness" : self.best_fitness}
     
-    def update_velocity(self, inertia_weight, cognitive_coeff, social_coeff, global_best_position):
+    def update_velocity_pso(self, inertia_weight, cognitive_coeff, social_coeff, global_best_position):
         """
         Func for updating velocity of particle
         Args:
@@ -35,6 +35,18 @@ class Particle:
         cognitive_component = cognitive_coeff * uniform(0, 1, self.position.shape) * (self.best_position - self.position)
         social_component = social_coeff * uniform(0, 1, self.position.shape) * (global_best_position - self.position)
         self.velocity = inertia_weight * self.velocity + cognitive_component + social_component
+
+    def update_velocity_sispo(self, neighbors, kc, c1, c2, global_best_position):
+        num_neighbors = len(neighbors)
+        phi = c1 + c2
+        eta = 2/(abs(2 - phi - np.sqrt(phi**2 - 4 * phi)))
+        if num_neighbors > kc:
+            neighbor_velocities = np.sum([self.velocity + np.random.uniform(0, phi) * (neighbor.best_position - self.position) for neighbor in neighbors], axis=0) / num_neighbors
+            self.velocity = eta * (self.velocity + neighbor_velocities)
+        else:
+            cognitive_component = np.random.uniform(0, c1) * (self.best_position - self.position)
+            social_component = np.random.uniform(0, c2) * (global_best_position - self.position)
+            self.velocity = eta * (self.velocity + cognitive_component + social_component)
 
     def update_position(self):
         """
