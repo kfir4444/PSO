@@ -6,6 +6,22 @@ from matplotlib import cm
 from particle import Particle
 
 class Swarm:
+    """
+    Class Swarm for swarm optimization.
+    Args:
+        num_particles (int): the number of particles that make up the swarm.
+        num_dimensions (int): the number of dimensions in the search space. This has to match the number of dimensions
+                                in the objective function we are optimizing.
+        search_range (dict): A dictionary specifying the lower and upper bounds of the search space for each dimension.
+                             Example: {"low": [lower_bound_1, lower_bound_2, ..., lower_bound_n],
+                                       "high": [upper_bound_1, upper_bound_2, ..., upper_bound_n]}
+        params (dict): A dictionary of parameters for the optimization algorithm. The parameters are different depending
+                        what optimization method the user chooses.
+                       For PSO: {"inertia_weight": float, "cognitive_coeff": float, "social_coeff": float}
+                       For SISPO: {"c1": float, "c2": float, "kc": int}
+        plot (bool): Whether to plot the optimization process. Only relevant for up to 2D.
+        optimization_type (str): The type of optimization algorithm to use. Options are 'pso' (default) and 'sispo'.
+    """
     def __init__(self, num_particles, num_dimensions, search_range, params, plot, optimization_type='pso'):
         self.num_particles = num_particles
         self.num_dimensions = num_dimensions
@@ -38,8 +54,35 @@ class Swarm:
 
     def __repr__(self):
         return "\n".join([p.__repr__() for p in self.particles])
-    
+
+    def generate_random_position(self):
+        """
+         Func for generating random positions for each particle in the swarm within the defined search range.
+         Args:
+             self
+             The particles' initial position is limited to the search_range argument.
+         """
+        return uniform(self.search_range['low'], self.search_range['high'], self.num_dimensions)
+
+    def generate_random_velocity(self):
+        """
+         Func for generating random velocity for each particle in the swarm within the defined search range.
+         Args:
+             self
+             The particles' initial velocity is limited to the search_range argument.
+         """
+        return uniform(-abs(array(self.search_range['low']) - array(self.search_range['high'])),
+                        abs(array(self.search_range['low']) - array(self.search_range['high'])),
+                        self.num_dimensions)
+
     def initialize_particles(self):
+        """
+        Func for initializing the particles' position and velocity.
+        Args:
+            self
+            The particles initial position is limited to the search_range argument. The amount of particles is dictated
+            by num_particles argument.
+        """
         particles = []
         for _ in range(self.num_particles):
             position = self.generate_random_position()
@@ -49,11 +92,18 @@ class Swarm:
         return particles
 
     def prepare_plot(self, objective_function, center=None):
+        """
+        Func that prepares the plot for visualization  of swarm optimization.
+        Args:
+            self, objective_function, center (None is default)
+            The plot is centered in the middle of the search range defined, however we usually like to show the plot
+            centered around the minimum of the objective function which have defined in the plotter function.
+        """
         if center is None:
             low, high = self.search_range['low'], self.search_range['high']
         else:
-            low = [center[0] - 2, center[1] - 2]
-            high = [center[0] + 2, center[1] + 2]
+            low = [center[0] - 10, center[1] - 10]
+            high = [center[0] + 10, center[1] + 10]
 
         self.x = linspace(low[0], high[0], 1000)
         self.y = linspace(low[1], high[1], 1000)
@@ -64,6 +114,13 @@ class Swarm:
                 self.z[j, i] = objective_function(self.x[i], self.y[j])
 
     def plotter(self, objective_function):
+        """
+        Func that plots the swarm optimization of a specific objective function.
+        Args:
+            self, objective_function
+            The center is chosen to be the min position of the objective function so the convergence is shown in a
+            manner that is easier to see.
+        """
         min_position = self.global_best_position
         self.prepare_plot(objective_function, center=min_position)
         X, Y = np.meshgrid(self.x, self.y)
@@ -77,15 +134,14 @@ class Swarm:
         ax.scatter(p[:, 0], p[:, 1], c="k", marker='+')
         plt.show()
 
-    def generate_random_position(self):
-        return uniform(self.search_range['low'], self.search_range['high'], self.num_dimensions)
-
-    def generate_random_velocity(self):
-        return uniform(-abs(array(self.search_range['low']) - array(self.search_range['high'])),
-                        abs(array(self.search_range['low']) - array(self.search_range['high'])),
-                        self.num_dimensions)
-
     def determine_neighbors(self):
+        """
+        Func that determines what particles and how many particles are considered neighbors for each individual particle.
+        Args:
+            self
+            Neighbors are particles that are closer than the mean euclidean distance from another particle. We might
+            consider a different definition of neighbors in the future.
+        """
         distances = np.zeros((self.num_particles, self.num_particles))
         neighbors = [[] for _ in range(self.num_particles)]
 
@@ -105,12 +161,27 @@ class Swarm:
         return neighbors, distances
 
     def update_global_best_position(self):
+        """
+        Func that updates the global best position based on the best fitness score of all the particles in the swarm.
+        Args:
+            self
+            Each particle has a different fitness score during each iteration of the optimization process, and the best
+            global position is updated to the position at which a particle receives a better fitness score than the
+            previous global best.
+        """
         for particle in self.particles:
             if particle.best_fitness < self.global_best_fitness:
                 self.global_best_position = particle.best_position
                 self.global_best_fitness = particle.best_fitness
 
     def optimize(self, objective_function, max_iterations):
+        """
+        Func that executes the swarm optimization of a specific objective function.
+        Args:
+            self, objective_function, max_iterations
+            This function implements all prior functions and executes the whole optimization process given a swarm and
+            objective function.
+        """
         for particle in self.particles:
             particle.best_fitness = particle.evaluate_fitness(objective_function)
             particle.best_position = particle.position

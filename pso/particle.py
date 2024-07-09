@@ -27,7 +27,7 @@ class Particle:
     
     def update_velocity_pso(self, inertia_weight, cognitive_coeff, social_coeff, global_best_position):
         """
-        Func for updating velocity of particle
+        Func for updating velocity of particle as per the original SPO algorithm
         Args:
             self, inertia_weight, cognitive_coeff, social_coeff, global_best_position
             The velocity can vary depending on how the user would like to allocate coeffs.
@@ -37,6 +37,16 @@ class Particle:
         self.velocity = inertia_weight * self.velocity + cognitive_component + social_component
 
     def update_velocity_sispo(self, neighbors, kc, c1, c2, global_best_position):
+        """
+        Func for updating velocity of particle as per the selectively informed SPO algorithm
+        Args:
+            self, neighbors, kc, c1, c2, global_best_position
+            The velocity can vary depending on how the user would like to allocate coeffs. c1 and c2 are similar to the
+            cognitive and social coeffs, we decided to call them different names due them being used in different algorithms.
+            kc is the threshold where a particle is considered a hub and has more influence if it has more neighbors than kc,
+            and if the particle has the same or less amount of neighbors as kc, it is less influenced by the other particles
+            and is 'free' to roam to find other optimums, thus this algorithm is less likely to converge on a local optima.
+        """
         num_neighbors = len(neighbors)
         phi = c1 + c2
         eta = 2/(abs(2 - phi - np.sqrt(phi**2 - 4 * phi)))
